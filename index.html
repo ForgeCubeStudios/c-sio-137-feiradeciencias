@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ZONA CÉSIO — Sobrevivência Urbana</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07111c;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#f5fbff;touch-action:none}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:fixed;inset:0;pointer-events:none;text-shadow:0 2px 5px #000b}
+.panel{background:linear-gradient(135deg,#0b1a2bdc,#08111edb);border:1px solid #9edcff55;border-radius:12px;box-shadow:0 8px 25px #0005;backdrop-filter:blur(5px)}
+#mission{position:absolute;left:16px;top:14px;padding:11px 14px;min-width:190px}
+.label{font-size:10px;letter-spacing:2px;color:#8edcff;font-weight:800}#objective{font-size:14px;font-weight:750;margin-top:3px}
+#right{position:absolute;right:16px;top:14px;width:min(250px,42vw);padding:10px 12px}
+#radlabel{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:1px}
+#radbar{height:9px;background:#263647;border-radius:20px;overflow:hidden;margin-top:7px;border:1px solid #ffffff22}
+#radfill{height:100%;width:0%;background:linear-gradient(90deg,#39f3b5,#ffdc4a,#ff4d5f);transition:width .2s}
+#bottom{position:absolute;left:16px;bottom:15px;padding:9px 12px;font-size:12px;color:#d7e7f5}
+#samples{position:absolute;left:50%;top:18px;transform:translateX(-50%);font-weight:900;font-size:13px;background:#06111bd9;border:1px solid #9edcff55;border-radius:30px;padding:8px 15px;white-space:nowrap}
+#symptom{position:absolute;left:50%;top:70px;transform:translateX(-50%);font-size:12px;font-weight:900;color:#b9f7ff;letter-spacing:1px;opacity:0;transition:opacity .2s}
+#touch{position:fixed;inset:0;pointer-events:none}
+#stick{position:absolute;left:20px;bottom:22px;width:116px;height:116px;border-radius:50%;background:#d6f4ff18;border:2px solid #c5edff55;pointer-events:auto;touch-action:none}
+#nub{position:absolute;left:34px;top:34px;width:44px;height:44px;border-radius:50%;background:#9fe7ff77;border:2px solid #d5f7ffcc}
+#action{position:absolute;right:22px;bottom:30px;width:78px;height:78px;border-radius:50%;border:2px solid #fff9;background:#00c8ff33;color:white;font-weight:900;pointer-events:auto;box-shadow:0 0 20px #00bfff55;touch-action:none}
+#action small{display:block;font-size:9px;letter-spacing:1px}
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#0b2039b8,#030913ed);z-index:5;padding:20px}
+.card{width:min(470px,100%);padding:26px;border-radius:18px;background:linear-gradient(145deg,#10263b,#08111e);border:1px solid #9fe6ff66;box-shadow:0 0 70px #00baff20;text-align:center}
+h1{font-size:clamp(26px,6vw,42px);line-height:1;margin:8px 0 12px;letter-spacing:-1px}h1 span{color:#56dfff}
+.card p{color:#c3d5e4;line-height:1.55;font-size:14px}.badge{display:inline-block;color:#74e7ff;border:1px solid #4dd9ff66;border-radius:30px;padding:6px 10px;font-size:10px;letter-spacing:2px;font-weight:900}
+#start{border:0;border-radius:10px;background:linear-gradient(90deg,#14b8e6,#347bff);color:#fff;font-size:15px;font-weight:900;padding:13px 25px;margin-top:8px;box-shadow:0 5px 22px #087dff55}
+#result{font-size:13px;color:#8beaff;margin-top:12px}
+@media(min-width:850px){#stick,#action{opacity:.55}#bottom{max-width:360px}}
+@media(max-width:600px){#mission{left:9px;top:9px;padding:8px 10px;min-width:0}#objective{font-size:11px}#right{right:9px;top:9px;padding:8px;width:145px}#radlabel{font-size:9px}#samples{top:69px;font-size:11px;padding:6px 10px}#symptom{top:103px;font-size:10px}#bottom{left:9px;bottom:148px;font-size:10px;max-width:190px}}
+
+#mainmenu{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:flex-start;padding:clamp(18px,7vw,100px);background:linear-gradient(90deg,rgba(5,7,12,.94),rgba(5,7,12,.68) 45%,rgba(5,7,12,.18)),radial-gradient(ellipse at 75% 55%,#60442d55,transparent 55%),#080b10}
+.menuinner{width:min(440px,100%)}.gametitle{font-size:clamp(46px,8vw,88px);font-weight:1000;letter-spacing:-4px;line-height:.82;text-transform:uppercase;text-shadow:4px 5px #000;color:#f4f0e8;margin:0 0 14px}.gametitle span{color:#36bfff}.menutag{font-size:11px;letter-spacing:3px;color:#b8d5df;margin:0 0 34px}
+.menurow{display:flex;gap:12px;align-items:stretch;margin:10px 0}.menuicon{width:64px;min-width:64px;border:1px solid #eee;background:#ffffff12;color:white;font-size:24px;display:grid;place-items:center}.menubtn{flex:1;text-align:left;padding:15px 20px;background:#050609d9;color:white;border:1px solid #ffffff25;font-weight:850;font-size:19px;cursor:pointer}.menubtn:hover,.menubtn:focus{background:#25371f;border-color:#b9f06a;outline:none}.menunote{color:#b6c0c7;font-size:12px;margin-top:22px;line-height:1.6}
+#cutscene{position:fixed;inset:0;z-index:9;display:none;align-items:flex-end;justify-content:center;padding:24px;background:linear-gradient(0deg,#03070af2,transparent 75%);pointer-events:auto}
+.storybox{width:min(760px,100%);padding:20px 24px;background:#06111beF;border:1px solid #9fe7ff70;border-left:5px solid #a7ed5d;box-shadow:0 0 40px #0008}
+.storylabel{font-size:10px;letter-spacing:3px;color:#a7ed5d;font-weight:900}.storytext{font-size:clamp(15px,2.4vw,21px);font-weight:650;line-height:1.5;margin:9px 0 15px}.storycontrols{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#b5c8d5;font-size:12px}.storybtn{background:#a7ed5d;border:0;border-radius:5px;color:#10170b;font-weight:900;padding:11px 20px;cursor:pointer}
+#fallscene{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:#050b10eF;overflow:hidden}
+.fallcard{text-align:center;width:min(560px,90vw);padding:28px}.fallfigure{width:140px;height:80px;position:relative;margin:10px auto 26px;animation:collapse 2.8s ease-in forwards}
+.fallbody{position:absolute;left:28px;top:35px;width:88px;height:28px;background:linear-gradient(90deg,#155f7c,#42c8d8);border:3px solid #b7f8ff;border-radius:12px;transform:rotate(13deg);box-shadow:0 0 25px #43eaff55}
+.fallhead{position:absolute;left:91px;top:20px;width:30px;height:30px;border-radius:45%;background:#d8e9e7;border:3px solid #6fa9b3}
+.fallleg{position:absolute;left:32px;top:54px;width:47px;height:13px;background:#f1a35d;border:2px solid #ffdfb0;transform:rotate(-18deg);border-radius:8px}
+@keyframes collapse{0%{transform:rotate(0) translateY(0)}35%{transform:rotate(14deg) translateY(8px)}65%{transform:rotate(76deg) translateY(27px)}100%{transform:rotate(90deg) translateY(36px);filter:brightness(.45)}}
+@media(max-width:600px){#mainmenu{padding:20px;background:linear-gradient(90deg,#05070af5,#05070ab8),radial-gradient(ellipse at 70% 45%,#60442d66,transparent 55%)}.menuicon{width:50px;min-width:50px}.menubtn{font-size:17px;padding:13px}.storybox{padding:16px}.fallcard{padding:14px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+ <div id="mission" class="panel"><div class="label">PROTOCOLO DE EMERGÊNCIA</div><div id="objective">Encontre 3 amostras</div></div>
+ <div id="samples">AMOSTRAS <span id="count">0</span>/3 · SAÍDA BLOQUEADA</div>
+ <div id="right" class="panel"><div id="radlabel"><span>EXPOSIÇÃO À RADIAÇÃO</span><span id="radnum">0%</span></div><div id="radbar"><div id="radfill"></div></div></div>
+ <div id="symptom">SINTOMAS LEVES</div>
+ <div id="bottom" class="panel">Explore a área, colete as amostras e chegue à evacuação.<br>Celular: use o controle e toque em IMPULSO</div>
+</div>
+<div id="touch"><div id="stick"><div id="nub"></div></div><button id="action">IMPULSO<small>ESQUIVAR</small></button></div>
+
+<div id="mainmenu">
+ <div class="menuinner">
+  <h1 class="gametitle">ZONA<br><span>CÉSIO</span></h1>
+  <div class="menutag">PROTOCOLO DE CONTENÇÃO · SETOR 07</div>
+  <div class="menurow"><div class="menuicon">▶</div><button class="menubtn" id="playmenu">Iniciar missão</button></div>
+  <div class="menurow"><div class="menuicon">◈</div><button class="menubtn" id="briefmenu">Briefing da missão</button></div>
+  <div class="menurow"><div class="menuicon">⚙</div><button class="menubtn" id="howmenu">Sobrevivência</button></div>
+  <div class="menunote">UMA ÁREA ISOLADA. TRÊS AMOSTRAS. UMA ÚNICA ROTA DE FUGA.<br>Experiência fictícia de sobrevivência — não representa orientação médica.</div>
+ </div>
+</div>
+<div id="cutscene"><div class="storybox"><div class="storylabel" id="storylabel">CENTRAL DE OPERAÇÕES · TRANSMISSÃO RECEBIDA</div><div class="storytext" id="storytext"></div><div class="storycontrols"><span id="storyhint">Pressione continuar para avançar</span><button class="storybtn" id="storynext">CONTINUAR →</button></div></div></div>
+<div id="fallscene"><div class="fallcard"><div class="storylabel">SINAL VITAL INSTÁVEL</div><div class="fallfigure"><div class="fallbody"></div><div class="fallhead"></div><div class="fallleg"></div></div><h1 style="font-size:clamp(27px,6vw,45px)">O PROTAGONISTA CAIU</h1><p style="color:#c4d6df;line-height:1.6">A exposição atingiu o limite. A missão foi interrompida antes da evacuação.</p><button class="storybtn" id="fallcontinue">VER RELATÓRIO</button></div></div>
+<div id="overlay"><div class="card"><div class="badge">MISSÃO DE SOBREVIVÊNCIA · 3 MIN</div><h1>ZONA <span>CÉSIO</span></h1><p>Uma cidade foi isolada após um acidente radioativo. Colete as <b>3 amostras azuis de césio</b> e alcance o portal de evacuação antes que a exposição derrube você.</p><p>O tempo está passando. Quanto mais demora, mais fortes ficam os efeitos: visão instável, pulsos de luz e movimento prejudicado. O jogo é fictício e simplificado.</p><button id="start">INICIAR MISSÃO</button><div id="result">Dica: as amostras brilham em azul. Siga os marcadores.</div></div></div>
+<script>
+(()=>{'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d',{alpha:false});
+const $=id=>document.getElementById(id);
+let W=innerWidth,H=innerHeight,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,1.5);W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+const world={w:1500,h:1100};
+const player={x:160,y:170,r:17,hp:100,rad:0,dx:0,dy:0,boost:0,inv:0};
+const samples=[{x:500,y:210,got:false},{x:1030,y:500,got:false},{x:350,y:850,got:false}];
+const exit={x:1320,y:930};
+const rocks=[],hazards=[],particles=[];
+// Carros estacionados em vagas espaçadas nas ruas; evitamos cruzamentos e colisões visuais.
+const cityCars=[];
+const carSlots=[
+ {x:135,y:262,v:false},{x:470,y:262,v:false},{x:620,y:262,v:false},{x:900,y:262,v:false},{x:1060,y:262,v:false},{x:1370,y:262,v:false},
+ {x:130,y:628,v:false},{x:470,y:628,v:false},{x:620,y:628,v:false},{x:900,y:628,v:false},{x:1060,y:628,v:false},{x:1370,y:628,v:false},
+ {x:250,y:145,v:true},{x:250,y:465,v:true},{x:250,y:820,v:true},
+ {x:700,y:145,v:true},{x:700,y:465,v:true},{x:700,y:820,v:true},
+ {x:1125,y:145,v:true},{x:1125,y:465,v:true},{x:1125,y:820,v:true}
+];
+for(let i=0;i<carSlots.length;i++){const a=carSlots[i];cityCars.push({x:a.x,y:a.y,vertical:a.v,c:i%5});}
+let seed=42;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+for(let i=0;i<52;i++){let x=80+rand()*1340,y=70+rand()*950;if(Math.hypot(x-player.x,y-player.y)<100)continue;rocks.push({x,y,r:18+rand()*28,k:rand()})}
+for(let i=0;i<7;i++)hazards.push({x:220+rand()*1050,y:160+rand()*760,r:55+rand()*45,phase:rand()*6});
+let keys={},joy={x:0,y:0,active:false},started=false,ended=false,last=0,time=0,cam={x:0,y:0},shake=0,flash=0;
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase()))e.preventDefault();if(e.code==='Space')boost()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function boost(){if(!started||ended||player.boost>0)return;player.boost=.42;player.inv=.55;burst(player.x,player.y,18,'#a6f4ff',2.7);shake=3}
+const stick=$('stick'),nub=$('nub');function joyStart(e){e.preventDefault();joy.active=true;stick.setPointerCapture?.(e.pointerId);joyMove(e)}function joyMove(e){if(!joy.active)return;let r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,len=Math.hypot(dx,dy),m=Math.min(38,len);joy.x=len?dx/len*m/38:0;joy.y=len?dy/len*m/38:0;nub.style.transform=`translate(${joy.x*38}px,${joy.y*38}px)`}function joyEnd(){joy.active=false;joy.x=joy.y=0;nub.style.transform='translate(0,0)'}
+stick.addEventListener('pointerdown',joyStart);stick.addEventListener('pointermove',joyMove);stick.addEventListener('pointerup',joyEnd);stick.addEventListener('pointercancel',joyEnd);$('action').addEventListener('pointerdown',e=>{e.preventDefault();boost()});
+
+let storyIndex=0;
+const storyPages=[
+ ["CENTRAL DE OPERAÇÕES · TRANSMISSÃO RECEBIDA","Agente, está me ouvindo? O setor de pesquisa foi isolado após um acidente com material radioativo. A equipe de contenção não conseguiu retornar."],
+ ["OBJETIVO PRIORITÁRIO","Sua missão é recuperar três amostras de estabilizador deixadas nos pontos de coleta. Elas são necessárias para liberar o portal de evacuação."],
+ ["ALERTA DE CONTAMINAÇÃO","O contador Geiger já está registrando radiação no ambiente. Evite as zonas contaminadas e não demore: a exposição vai aumentar com o tempo. Se chegar ao limite, você não conseguirá concluir a missão."]
+];
+function showStory(i){storyIndex=i;$('storylabel').textContent=storyPages[i][0];$('storytext').textContent=storyPages[i][1];$('storynext').textContent=i===storyPages.length-1?'ACEITAR MISSÃO →':'CONTINUAR →'}
+function openBriefing(){ $('mainmenu').style.display='none';$('cutscene').style.display='flex';showStory(0); }
+$('playmenu').onclick=openBriefing;
+$('briefmenu').onclick=openBriefing;
+$('howmenu').onclick=()=>{ $('storylabel').textContent='SOBREVIVÊNCIA';$('storytext').textContent='Colete as três amostras azuis e alcance o portal. As áreas tóxicas aceleram a exposição. O joystick virtual e o botão IMPULSO funcionam em telas sensíveis ao toque.';$('storynext').textContent='VOLTAR AO MENU';$('cutscene').style.display='flex';$('mainmenu').style.display='none';storyIndex=-2;};
+$('storynext').onclick=()=>{
+ if(storyIndex===-2){$('cutscene').style.display='none';$('mainmenu').style.display='flex';return;}
+ if(storyIndex<storyPages.length-1){showStory(storyIndex+1);return;}
+ $('cutscene').style.display='none';$('overlay').style.display='none';started=true;last=performance.now();requestAnimationFrame(loop);
+};
+$('start').onclick=()=>{ $('overlay').style.display='none';$('mainmenu').style.display='flex'; };
+
+function burst(x,y,n,color,power=1){for(let i=0;i<n&&particles.length<450;i++){let a=rand()*Math.PI*2,s=(.5+rand()*3)*power;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.3+rand()*.65,max:.3+rand()*.65,size:1+rand()*4,color})}}
+function proj(x,y){return {x:(x-y)*.82,y:(x+y)*.43}}
+function screen(x,y){let p=proj(x-cam.x,y-cam.y);return {x:W/2+p.x,y:H/2+p.y}}
+function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function drawTile(x,y,size,color){let p=screen(x,y),w=size*.82,h=size*.43;ctx.beginPath();ctx.moveTo(p.x,p.y-h);ctx.lineTo(p.x+w,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(p.x-w,p.y);ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.strokeStyle='#a7c1cf13';ctx.lineWidth=1;ctx.stroke()}
+function drawWorld(){
+  // Céu diurno azul vivo e colorido
+  let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#168fff');sky.addColorStop(.55,'#55c7ff');sky.addColorStop(1,'#c9f2ff');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.globalAlpha=.9;ctx.fillStyle='#fff5b8';ctx.beginPath();ctx.arc(W*.82,H*.16,30,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.22;ctx.beginPath();ctx.arc(W*.82,H*.16,48,0,Math.PI*2);ctx.fill();ctx.restore();
+  for(let i=0;i<8;i++){let cx=((i*211+time*3)%(W+180))-90,cy=35+(i%4)*43;ctx.fillStyle='#ffffffb8';ctx.beginPath();ctx.ellipse(cx,cy,42,12,0,0,Math.PI*2);ctx.ellipse(cx+25,cy-5,27,15,0,0,Math.PI*2);ctx.ellipse(cx-23,cy+2,24,11,0,0,Math.PI*2);ctx.fill()}
+  // Caixa delimitada do terreno: grama urbana, ruas e quarteirões ficam dentro dela
+  const corners=[screen(0,0),screen(world.w,0),screen(world.w,world.h),screen(0,world.h)];ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.save();ctx.clip();
+  ctx.fillStyle='#75b968';ctx.fill();
+  // manchas suaves na grama e pequenos canteiros
+  for(let y=60;y<world.h;y+=145)for(let x=55;x<world.w;x+=155){let p=screen(x,y);ctx.fillStyle=((x+y)%3)?'#80c46e':'#68ad5d';ctx.beginPath();ctx.ellipse(p.x,p.y,35,13,.2,0,Math.PI*2);ctx.fill()}
+  function polyWorld(points,fill,stroke='#17252b',lw=3){ctx.beginPath();points.forEach((v,i)=>{let p=screen(v[0],v[1]);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}
+  // Ruas largas, conectadas em cruzamentos reais
+  const roadY=[285,650,950],roadX=[300,760,1190];
+  for(const y of roadY){polyWorld([[0,y-55],[world.w,y-55],[world.w,y+55],[0,y+55]],'#9aa9a8','#d6e2df',4);polyWorld([[0,y-48],[world.w,y-48],[world.w,y+48],[0,y+48]],'#465963','#172b35',3);ctx.save();ctx.strokeStyle='#ffe59a';ctx.lineWidth=3;ctx.setLineDash([18,16]);let a=screen(0,y),b=screen(world.w,y);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore()}
+  for(const x of roadX){polyWorld([[x-48,0],[x+48,0],[x+48,world.h],[x-48,world.h]],'#a6b6b4','#d6e2df',4);polyWorld([[x-41,0],[x+41,0],[x+41,world.h],[x-41,world.h]],'#465963','#172b35',3);ctx.save();ctx.strokeStyle='#ffe59a';ctx.lineWidth=3;ctx.setLineDash([18,16]);let a=screen(x,0),b=screen(x,world.h);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore()}
+  // Faixas de pedestres alinhadas aos quatro braços de cada cruzamento.
+  // As listras são polígonos no espaço do mundo, então acompanham a perspectiva isométrica.
+  for(const x of roadX)for(const y of roadY){
+    // Travessias da rua horizontal, antes e depois da avenida vertical
+    for(const side of [-1,1]) for(let k=-3;k<=3;k++){
+      const cx=x+side*66, yy=y+k*10;
+      polyWorld([[cx-9,yy-4],[cx-2,yy-4],[cx-2,yy+4],[cx-9,yy+4]],'#f4f3e8','#f4f3e8',1);
+    }
+    // Travessias da rua vertical, acima e abaixo da rua horizontal
+    for(const side of [-1,1]) for(let k=-3;k<=3;k++){
+      const xx=x+k*10, cy=y+side*66;
+      polyWorld([[xx-4,cy-9],[xx+4,cy-9],[xx+4,cy-2],[xx-4,cy-2]],'#f4f3e8','#f4f3e8',1);
+    }
+  }
+  // Prédios e casas nos quarteirões, sem ocupar as faixas das ruas
+  const blocks=[];for(let y=70;y<world.h-80;y+=250)for(let x=65;x<world.w-80;x+=250){let nearRoad=roadX.some(rx=>Math.abs(x-rx)<105)||roadY.some(ry=>Math.abs(y-ry)<100);if(!nearRoad)blocks.push({x,y,w:70+(Math.floor(x+y)%3)*18,h:65+(Math.floor(x*2+y)%3)*17,house:((x+y)%2)<1,kind:Math.abs(Math.floor(x+y))%4})}
+  for(const b of blocks){let p=screen(b.x,b.y),w=b.w*.82,h=b.h*.43,ht=b.house?25:42+(b.kind%3)*8; if(p.x<-160||p.x>W+160||p.y<-160||p.y>H+160)continue;
+    // shadow and visible side for 3D volume
+    ctx.fillStyle='#1d343b66';ctx.beginPath();ctx.moveTo(p.x-w/2,p.y);ctx.lineTo(p.x,p.y+h);ctx.lineTo(p.x+w/2,p.y);ctx.lineTo(p.x,p.y-h);ctx.closePath();ctx.fill();
+    const topY=p.y-ht;ctx.fillStyle=b.house?['#f0d2a5','#e5b8a8','#d5e5d0'][b.kind%3]:['#d5e2e9','#bdceda','#d9d0bd'][b.kind%3];ctx.strokeStyle='#17252b';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(p.x-w/2,topY);ctx.lineTo(p.x,topY-h*.45);ctx.lineTo(p.x+w/2,topY);ctx.lineTo(p.x,topY+h*.45);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle=b.house?'#ad6251':'#879ba8';ctx.beginPath();ctx.moveTo(p.x-w/2,topY);ctx.lineTo(p.x,topY+h*.45);ctx.lineTo(p.x,p.y+h*.45);ctx.lineTo(p.x-w/2,p.y);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle=b.house?'#bf7259':'#aebfc9';ctx.beginPath();ctx.moveTo(p.x,topY+h*.45);ctx.lineTo(p.x+w/2,topY);ctx.lineTo(p.x+w/2,p.y);ctx.lineTo(p.x,p.y+h*.45);ctx.closePath();ctx.fill();ctx.stroke();
+    if(b.house){
+      // Telhado inclinado com duas águas, beiral e chaminé
+      ctx.fillStyle=['#a64e3c','#6e7788','#9a493e','#5e6d7b'][b.kind%4];
+      ctx.strokeStyle='#17252b';ctx.lineWidth=3;ctx.beginPath();
+      ctx.moveTo(p.x-w/2-7,topY+5);ctx.lineTo(p.x-w*.18,topY-20);
+      ctx.lineTo(p.x+w/2+7,topY+5);ctx.lineTo(p.x+w*.20,topY+16);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='#5c3c2d';ctx.fillRect(p.x-5,p.y-ht*.1,10,ht*.55);ctx.strokeRect(p.x-5,p.y-ht*.1,10,ht*.55);
+      ctx.fillStyle='#8de0f5';ctx.fillRect(p.x-w*.30,topY+10,12,11);ctx.strokeStyle='#243b45';ctx.strokeRect(p.x-w*.30,topY+10,12,11);
+      ctx.fillStyle='#8de0f5';ctx.fillRect(p.x+w*.17,topY+10,12,11);ctx.strokeRect(p.x+w*.17,topY+10,12,11);
+      ctx.strokeStyle='#f4e6c7';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x-w*.32,topY+15);ctx.lineTo(p.x-w*.17,topY+15);ctx.moveTo(p.x+w*.15,topY+15);ctx.lineTo(p.x+w*.30,topY+15);ctx.stroke();
+      ctx.fillStyle='#6d4b37';ctx.fillRect(p.x-w*.36,p.y+h*.12,8,13);ctx.fillStyle='#e4bd76';ctx.fillRect(p.x-w*.34,p.y+h*.15,3,7);
+    } else {
+      // Fachada de prédio: andares, janelas, marquises, letreiro e unidade de ar-condicionado
+      for(let floor=0;floor<3;floor++){
+        const fy=topY+8+floor*13;
+        ctx.fillStyle=floor===0?'#247da0':'#4ab2d4';
+        for(let wx=-1;wx<=1;wx++){
+          const wxp=p.x+wx*15-5;
+          ctx.fillRect(wxp,fy,10,9);ctx.strokeStyle='#172d38';ctx.lineWidth=1.5;ctx.strokeRect(wxp,fy,10,9);
+          ctx.strokeStyle='#d8f7ff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(wxp+5,fy+1);ctx.lineTo(wxp+5,fy+8);ctx.stroke();
+        }
+      }
+      ctx.fillStyle='#344c58';ctx.fillRect(p.x-w*.34,topY+49,w*.68,6);ctx.strokeStyle='#17252b';ctx.lineWidth=2;ctx.strokeRect(p.x-w*.34,topY+49,w*.68,6);
+      ctx.fillStyle='#f1c65b';ctx.fillRect(p.x-7,p.y-ht*.12,14,ht*.48);ctx.strokeStyle='#17252b';ctx.strokeRect(p.x-7,p.y-ht*.12,14,ht*.48);
+      ctx.fillStyle='#e8f4f7';ctx.font='bold 7px Arial';ctx.textAlign='center';ctx.fillText(['MERCADO','HOTEL','SETOR 07','OFICINAS'][b.kind%4],p.x,topY-4);
+    }
+  }
+  // Sedãs escuros com silhueta e detalhes inspirados na referência enviada.
+  // O desenho usa a perspectiva isométrica do mundo, com capô, para-brisa,
+  // teto, janelas laterais, rodas, faróis e lanternas separados.
+  const carPaint=['#303237','#393a3e','#282b30','#414247','#30343a'];
+  for(const c of cityCars){
+    const x0=c.x,y0=c.y;
+    const forward=c.vertical?[0,1]:[1,0],side=c.vertical?[1,0]:[0,1];
+    const point=(a,b,lift=0)=>{const q=screen(x0+forward[0]*a+side[0]*b,y0+forward[1]*a+side[1]*b);return{x:center.x+(q.x-center.x)*1.12,y:center.y+(q.y-center.y)*1.42-lift*1.8}};
+    const center=screen(x0,y0);if(center.x<-140||center.x>W+140||center.y<-140||center.y>H+140)continue;
+    const path=(pts,fill,stroke='#111318',lw=1.5)=>{ctx.beginPath();pts.forEach((v,i)=>{const q=point(v[0],v[1],v[2]||0);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}};
+    const line=(pts,color='#70747a',lw=1)=>{ctx.beginPath();pts.forEach((v,i)=>{const q=point(v[0],v[1],v[2]||0);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()};
+    const paint=carPaint[c.c];
+    // Sombra e pneus sob a carroceria.
+    ctx.fillStyle='#101a20aa';ctx.beginPath();ctx.ellipse(center.x+2,center.y+10,35,21,c.vertical?Math.PI/2:0,0,Math.PI*2);ctx.fill();
+    for(const a of [-20,20])for(const b of [-13,13]){const q=point(a,b,1);ctx.fillStyle='#111216';ctx.beginPath();ctx.ellipse(q.x,q.y+2,5.2,3.8,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#555960';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle='#8b8d91';ctx.beginPath();ctx.arc(q.x,q.y+2,1.8,0,Math.PI*2);ctx.fill()}
+    // Carroceria: capô curto na frente, laterais baixas e traseira arredondada.
+    path([[-32,-10],[-27,-16],[20,-16],[30,-10],[32,0],[29,11],[20,16],[-27,16],[-32,9]],'#17191d');
+    path([[-32,-9],[-27,-15],[19,-15],[29,-9],[31,0],[27,10],[19,14],[-27,14],[-31,8]],paint);
+    // Faces de sombra para dar volume sem parecer um bloco quadrado.
+    path([[-32,-9],[-27,-15],[-27,-12],[-30,5]],'#56585d','#202126',1);
+    path([[-30,5],[-27,-12],[19,-12],[27,-7],[27,10],[19,14],[-27,14],[-31,8]],'#292b30','#17191d',1);
+    path([[19,-15],[29,-9],[31,0],[27,10],[19,14],[19,-12]],'#1b1d21','#111318',1);
+    // Capô e tampa do porta-malas com reflexos sutis.
+    path([[8,-12],[24,-11],[29,-7],[30,0],[27,7],[23,10],[8,10]],'#383a3f','#202126',1);
+    line([[10,-10],[24,-9],[28,-5]],'#62646a',1);
+    path([[-31,-7],[-27,-12],[-18,-12],[-18,12],[-27,12],[-31,7]],'#34363b','#1a1b20',1);
+    line([[-28,-7],[-24,-10],[-20,-10]],'#5c5e63',1);
+    // Habitáculo elevado: para-brisa frontal, vidro traseiro, teto e vidros laterais escuros.
+    path([[-17,-12],[-10,-13],[7,-12],[15,-8],[17,0],[14,9],[6,12],[-12,12],[-18,7],[-20,0]],'#16181c','#0d0e12',1.5);
+    path([[-16,-10],[-10,-11],[0,-10],[5,-7],[5,-1],[-14,-1],[-18,-4]],'#34363b','#08090c',1);
+    path([[-14,1],[5,1],[11,4],[9,8],[5,10],[-11,10],[-16,6]],'#292b30','#08090c',1);
+    path([[7,-10],[13,-7],[15,0],[12,7],[7,10],[5,6],[6,-5]],'#202227','#08090c',1);
+    path([[-9,-8],[4,-8],[10,-5],[11,0],[-10,0],[-15,-3]],'#111318','#050609',1);
+    path([[-10,2],[10,2],[8,6],[4,8],[-10,8],[-14,5]],'#191b20','#050609',1);
+    // Teto grafite com contorno e dois frisos leves.
+    path([[-9,-7],[4,-7],[9,-4],[9,4],[4,7],[-9,7],[-14,4],[-14,-3]],'#303237','#5b5d62',1.2);
+    line([[-10,-5],[3,-5],[7,-3]],'#64666b',1);
+    line([[-10,5],[3,5],[7,3]],'#4a4c51',1);
+    // Divisórias, maçanetas, retrovisores, faróis e lanternas.
+    line([[5,-10],[5,10]],'#090a0d',2);
+    line([[-1,-12],[-1,12]],'#55575c',.8);
+    for(const b of [-15,15]){
+      const m=point(-5,b,3);ctx.fillStyle='#25272c';ctx.beginPath();ctx.ellipse(m.x,m.y,3,2,0,0,Math.PI*2);ctx.fill();
+      const h=point(28,b*.63,2);ctx.fillStyle='#e4e4df';ctx.beginPath();ctx.ellipse(h.x,h.y,3.4,1.7,0,0,Math.PI*2);ctx.fill();
+      const t=point(-29,b*.62,2);ctx.fillStyle='#a82c38';ctx.beginPath();ctx.ellipse(t.x,t.y,2.5,1.7,0,0,Math.PI*2);ctx.fill();
+    }
+    const mirror=point(-8,-16,4);ctx.fillStyle='#292b30';ctx.beginPath();ctx.ellipse(mirror.x,mirror.y,3.2,2.3,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#090a0c';ctx.stroke();
+  }
+  // Limite escuro da caixa de terreno
+  ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.strokeStyle='#172b35';ctx.lineWidth=5;ctx.stroke();ctx.restore();
+  // Césio representado como pó: centenas de partículas minúsculas, espalhadas e suspensas no ar.
+  // Sem bolas grandes nem contorno circular; a área contaminada é percebida pela nuvem de grãos azuis.
+  for(const z of hazards){
+    for(let i=0;i<105;i++){
+      const seedA=i*2.399+z.phase, spread=Math.sqrt(((i*37)%107)/107);
+      const driftX=Math.sin(time*.48+seedA)*5+Math.sin(time*.17+i)*3;
+      const driftY=Math.cos(time*.42+seedA*1.3)*3+Math.sin(time*.21+i*.7)*2;
+      const wx=z.x+Math.cos(seedA)*z.r*.92*spread+driftX;
+      const wy=z.y+Math.sin(seedA)*z.r*.70*spread+driftY;
+      const q=screen(wx,wy);const size=.65+((i*13)%7)*.19;
+      ctx.globalAlpha=.48+(.5+.5*Math.sin(time*1.4+i*1.7))*.42;
+      ctx.fillStyle=i%8===0?'#d9f8ff':(i%3===0?'#63d9ff':'#149fe9');
+      ctx.beginPath();ctx.arc(q.x,q.y,size,0,Math.PI*2);ctx.fill();
+      if(i%13===0){ctx.globalAlpha*=.25;ctx.fillStyle='#43caff';ctx.beginPath();ctx.arc(q.x,q.y,size*2.5,0,Math.PI*2);ctx.fill()}
+    }
+  }
+  ctx.globalAlpha=1;
+  // amostras azuis e portal mantêm as mesmas coordenadas e regras do jogo
+  samples.forEach((s,i)=>{if(s.got)return;let p=screen(s.x,s.y),pulse=1+Math.sin(time*4+i)*.12;ctx.save();ctx.shadowBlur=18;ctx.shadowColor='#25c8ff';ctx.fillStyle='#44dcff33';ctx.beginPath();ctx.ellipse(p.x,p.y+3,22*pulse,10*pulse,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.translate(p.x,p.y-8);ctx.rotate(Math.sin(time*2+i)*.12);ctx.fillStyle='#e8ffff';ctx.fillRect(-9,-12,18,24);ctx.fillStyle='#178fc5';ctx.fillRect(-6,-9,12,18);ctx.fillStyle='#d5ffff';ctx.fillRect(-6,-5,12,3);ctx.restore();ctx.fillStyle='#e6faff';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText('AMOSTRA '+(i+1),p.x,p.y-30)});
+  let ep=screen(exit.x,exit.y),open=samples.every(s=>s.got);ctx.save();ctx.translate(ep.x,ep.y);ctx.rotate(time*.25);ctx.shadowBlur=open?25:8;ctx.shadowColor=open?'#5affd8':'#688ca0';ctx.strokeStyle=open?'#7bffe1':'#688ca0';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(0,0,25,13,0,0,Math.PI*2);ctx.stroke();ctx.restore();ctx.fillStyle=open?'#8bffe7':'#e6f7ff';ctx.textAlign='center';ctx.font='bold 11px system-ui';ctx.fillText(open?'EVACUAÇÃO':'SAÍDA BLOQUEADA',ep.x,ep.y-25);
+}
+function drawPlayer(){let p=screen(player.x,player.y),flicker=player.inv>0&&Math.floor(time*20)%2===0;ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle='#02091288';ctx.beginPath();ctx.ellipse(0,8,17,8,0,0,Math.PI*2);ctx.fill();if(!flicker){ctx.shadowBlur=player.rad>55?17:8;ctx.shadowColor=player.rad>55?'#b3ffdb':'#49caff';ctx.fillStyle='#f0d928';ctx.strokeStyle='#111c22';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-12,2);ctx.lineTo(-10,-13);ctx.lineTo(-6,-18);ctx.lineTo(6,-18);ctx.lineTo(11,-12);ctx.lineTo(13,3);ctx.lineTo(0,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#f5dc2a';ctx.beginPath();ctx.arc(0,-19,9,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#102e3d';ctx.beginPath();ctx.ellipse(0,-20,6,5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#111c22';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-4);ctx.lineTo(-14,6);ctx.moveTo(8,-4);ctx.lineTo(14,6);ctx.stroke();ctx.fillStyle='#273944';ctx.fillRect(-10,5,8,7);ctx.fillRect(2,5,8,7);ctx.fillStyle='#f8f0a0';ctx.fillRect(-4,-7,8,3)}ctx.restore()}
+function drawFX(){
+ const r=player.rad, pulse=.5+.5*Math.sin(time*(2+r*.04));
+ if(r>12){ctx.fillStyle=`rgba(47,255,196,${Math.min(.10,(r-12)*.0015)*pulse})`;ctx.fillRect(0,0,W,H)}
+ if(r>=25){
+   const g=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.2,W/2,H/2,Math.max(W,H)*.72);
+   g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(30,255,188,${Math.min(.28,(r-20)*.004)})`);
+   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ }
+ if(r>=40){ctx.save();ctx.globalAlpha=Math.min(.65,(r-35)*.012);for(let i=0;i<10;i++){let x=(i*137+time*(25+i*4))%(W+20)-10,y=(i*83+Math.sin(time*1.7+i)*42+H*.13)%(H+10);ctx.fillStyle=i%3===0?'#ff5bce':i%3===1?'#74f7ff':'#d7ff63';ctx.fillRect(x,y,2+(i%3),2+(i%2))}ctx.restore()}
+ if(r>=50){
+   // Mild chromatic aberration and dizziness-like wobble without expensive blur filters.
+   const strength=Math.min(5,(r-48)*.12);ctx.save();ctx.globalAlpha=Math.min(.11,(r-48)*.002);
+   ctx.fillStyle='#ff3fb4';ctx.fillRect(strength,0,W,H);ctx.fillStyle='#22e9ff';ctx.fillRect(-strength,0,W,H);ctx.restore();
+   if(Math.sin(time*6)>0.92){ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(0,rand()*H,W,2+rand()*4)}
+ }
+ if(r>=65){
+   // Blur-like peripheral haze, simulated with translucent edge bands for performance.
+   const haze=Math.min(.35,(r-60)*.012);ctx.fillStyle=`rgba(178,224,215,${haze*.35})`;ctx.fillRect(0,0,W,Math.max(18,H*.055));ctx.fillRect(0,H-Math.max(18,H*.055),W,Math.max(18,H*.055));
+   const wobble=Math.sin(time*2.4)*Math.min(7,(r-60)*.12);ctx.save();ctx.globalAlpha=.07;ctx.fillStyle='#c4ffff';ctx.fillRect(wobble,0,W,H);ctx.restore();
+ }
+ if(r>=80){ctx.fillStyle=`rgba(255,55,78,${.035+pulse*.09})`;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.12;for(let y=(time*45)%6;y<H;y+=6){ctx.fillStyle=y%2?'#ff7cce':'#78f6ff';ctx.fillRect(0,y,W,1)}ctx.restore()}
+ if(r>=92&&Math.sin(time*5)>0.55){ctx.fillStyle='rgba(245,255,255,.16)';ctx.fillRect(0,0,W,H)}
+ if(flash>0){ctx.fillStyle=`rgba(125,255,224,${flash})`;ctx.fillRect(0,0,W,H)}
+}
+function update(dt){
+ time+=dt;player.rad=Math.min(100,player.rad+dt*0.72);player.boost=Math.max(0,player.boost-dt);player.inv=Math.max(0,player.inv-dt);shake=Math.max(0,shake-dt*10);
+ let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x,iy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;let l=Math.hypot(ix,iy);if(l>1){ix/=l;iy/=l}
+ let speed=190*(player.rad>75?.62:player.rad>48?.78:1)*(player.boost>0?2.5:1);
+ player.dx+=(ix*speed-player.dx)*Math.min(1,dt*9);player.dy+=(iy*speed-player.dy)*Math.min(1,dt*9);player.x=Math.max(25,Math.min(world.w-25,player.x+player.dx*dt));player.y=Math.max(25,Math.min(world.h-25,player.y+player.dy*dt));
+ let inHazard=false;for(const z of hazards)if(Math.hypot(player.x-z.x,player.y-z.y)<z.r){inHazard=true;break}if(inHazard)player.rad=Math.min(100,player.rad+dt*2.2);
+ if(rand()<dt*8&&particles.length<350)particles.push({x:player.x+(rand()-.5)*60,y:player.y+(rand()-.5)*40,vx:(rand()-.5)*10,vy:-8-rand()*15,life:.5+rand()*.5,max:1,size:1+rand()*2,color:player.rad>40?'#62d9ff':'#55dfff'});
+ for(const s of samples)if(!s.got&&Math.hypot(player.x-s.x,player.y-s.y)<40){s.got=true;burst(s.x,s.y,35,'#67f3ff',1.7);flash=.18;shake=4;$('count').textContent=samples.filter(a=>a.got).length}
+ if(samples.every(s=>s.got)&&Math.hypot(player.x-exit.x,player.y-exit.y)<48){finish(true);return}
+ for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vx*=.98;p.vy*=.98;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
+ cam.x+=(player.x-cam.x)*Math.min(1,dt*4);cam.y+=(player.y-cam.y)*Math.min(1,dt*4);flash=Math.max(0,flash-dt);
+ $('radfill').style.width=player.rad+'%';$('radnum').textContent=Math.floor(player.rad)+'%';
+ let symptom=player.rad<12?'EXPOSIÇÃO BAIXA':player.rad<25?'FASE 1 · SINAIS DE CONTAMINAÇÃO':player.rad<40?'FASE 2 · TONTURA LEVE':player.rad<55?'FASE 3 · VISÃO INSTÁVEL':player.rad<70?'FASE 4 · VISÃO EMBASSADA':player.rad<85?'FASE 5 · ALERTA VERMELHO':'FASE CRÍTICA · EVACUE AGORA';
+ $('symptom').textContent=symptom;$('symptom').style.opacity=player.rad>15?1:0;
+ $('objective').textContent=samples.every(s=>s.got)?'Corra até o portal de evacuação!':`Colete as amostras (${samples.filter(s=>s.got).length}/3)`;
+ $('samples').innerHTML=`AMOSTRAS <span id="count">${samples.filter(s=>s.got).length}</span>/3 · ${samples.every(s=>s.got)?'SAÍDA LIBERADA':'SAÍDA BLOQUEADA'}`;
+ if(player.rad>=100){beginFall()}
+}
+function render(){ctx.save();if(shake>0)ctx.translate((rand()-.5)*shake,(rand()-.5)*shake);drawWorld();drawPlayer();for(const p of particles){let q=screen(p.x,p.y);ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.shadowBlur=5;ctx.shadowColor=p.color;ctx.beginPath();ctx.arc(q.x,q.y,p.size,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;ctx.shadowBlur=0;drawFX();ctx.restore()}
+function loop(now){if(!started||ended)return;let dt=Math.min(.033,(now-last)/1000||.016);last=now;update(dt);render();if(!ended)requestAnimationFrame(loop)}
+
+let falling=false;
+function beginFall(){
+ if(falling||ended)return;falling=true;ended=true;player.dx=0;player.dy=0;
+ $('fallscene').style.display='flex';
+ setTimeout(()=>{$('fallcontinue').textContent='VER RELATÓRIO →';},2600);
+}
+$('fallcontinue').onclick=()=>{
+ $('fallscene').style.display='none';$('overlay').style.display='flex';
+ $('overlay').querySelector('.badge').textContent='RELATÓRIO DA MISSÃO';
+ $('overlay').querySelector('h1').innerHTML='ZONA <span>PERDIDA</span>';
+ $('overlay').querySelector('p').innerHTML='O protagonista caiu antes de alcançar a evacuação. A exposição atingiu o limite e a missão foi encerrada.';
+ $('overlay').querySelectorAll('p')[1].textContent=`Tempo de missão: ${Math.floor(time)} segundos. Exposição final: 100%.`;
+ $('start').textContent='TENTAR NOVAMENTE';$('start').onclick=()=>location.reload();
+ $('result').textContent='Tente coletar as amostras rapidamente e evite as zonas contaminadas.';
+};
+function finish(win){ended=true;$('overlay').style.display='flex';$('overlay').querySelector('.badge').textContent=win?'MISSÃO CONCLUÍDA':'SINAL VITAL PERDIDO';$('overlay').querySelector('h1').innerHTML=win?'VOCÊ <span>ESCAPOU</span>':'ZONA <span>PERDIDA</span>';$('overlay').querySelector('p').innerHTML=win?'As três amostras foram recuperadas e você chegou ao portal. A evacuação foi concluída!':'A exposição chegou ao limite antes da fuga. Tente outra rota e evite as zonas tóxicas.';$('overlay').querySelectorAll('p')[1].textContent=`Tempo de missão: ${Math.floor(time)} segundos. Exposição final: ${Math.floor(player.rad)}%.`;$('start').textContent='JOGAR NOVAMENTE';$('start').onclick=()=>location.reload();$('result').textContent=win?'Boa fuga. Protocolo encerrado.':'Dica: use o impulso para atravessar zonas perigosas.'}
+$('overlay').style.display='none';
+render();
+})();
+</script>
+</body>
+</html>
